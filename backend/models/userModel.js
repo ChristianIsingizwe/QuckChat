@@ -5,18 +5,18 @@ export const User = mongoose.model(
   "users",
   new mongoose.Schema({
     username: {
-      type: string,
+      type: String,
       maxlength: 255,
       required: true,
     },
     email: {
-      type: string,
+      type: String,
       maxlength: 255,
       required: true,
       unique: true,
     },
     password: {
-      type: string,
+      type: String,
       minlength: 8,
       required: true,
     },
