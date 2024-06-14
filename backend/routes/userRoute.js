@@ -4,15 +4,16 @@ import {
   loginUser,
   findUser,
   findUsers,
-  logoutUser
+  getProfile,
 } from "../controllers/userController.js";
+
+import { isAuth } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.get("/:id", findUser);
-router.get("/", findUsers);
-router.post('/logout', logoutUser)
-
+router.get("/:id", isAuth, findUser);
+router.get("/", isAuth, findUsers);
+router.get("/getProfile", isAuth, getProfile);
 
 export default router;

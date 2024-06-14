@@ -3,9 +3,9 @@ import bcrypt, { genSalt } from "bcrypt";
 import _ from "lodash";
 import { User } from "../models/userModel.js";
 import { createTokens } from "../tokens/createTokens.js";
-import { verify } from "jsonwebtoken";
 
 // A joi schema for validating the users
+
 const schema = Joi.object({
   username: Joi.string().min(1).max(255),
   email: Joi.string().email().min(3).max(255).required(),
@@ -13,6 +13,7 @@ const schema = Joi.object({
 });
 
 // Function for registering the user in the database
+
 export const registerUser = async (req, res) => {
   const data = _.pick(req.body, ["username", "email", "password"]);
 
@@ -22,7 +23,9 @@ export const registerUser = async (req, res) => {
     return res.status(400).json({ error: result.error.details[0].message });
 
   try {
-    let user = await User.findOne({ email: data.email });
+    let user = await User.findOne({ email: data.email }).select(
+      "username, password"
+    );
     if (user) res.status(400).json({ error: "The user already exist" });
 
     const salt = await bcrypt.genSalt(10);
@@ -50,7 +53,7 @@ export const loginUser = async (req, res) => {
     return res.status(400).json({ error: result.error.details[0].message });
 
   try {
-    let user = User.findOne({ email: data.email });
+    let user = User.findOne({ email: data.email }).select("username, email");
     if (!user) return res.status(400).json({ error: "The user doesn't exist" });
 
     const passwordCheck = bcrypt.compare(data.password, user.password);
@@ -64,12 +67,14 @@ export const loginUser = async (req, res) => {
 };
 
 // Function for finding all the users
+
 export const findUsers = async (req, res) => {
-  const users = User.find();
+  const users = User.find().select("email");
   res.status(200).json(users);
 };
 
 // Function for finding a user using his id
+
 export const findUser = async (req, res) => {
   const id = _.pick(req.params, ["id"]);
 
@@ -78,30 +83,14 @@ export const findUser = async (req, res) => {
   res.status(200).json(user);
 };
 
-// Function for logging out the user
+// Function for getting the profile of the user
 
-export const logoutUser = async (req, res) => {
-  const refreshToken = req.headers["refresh-token"];
+export const getProfile = async (req, res) => {
+  const userId = _.pick(req.params, ["id"]);
 
-  if (!refreshToken) return res.status(401).json({ error: "Unauthorized " });
+  const userProfile = await User.findById(userId).select("username, password");
+  if (!userProfile)
+    return res.status(404).json({ error: "User profile not found" });
 
-  try {
-    const decoded = verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-
-    const user = await User.findById(decoded.userId);
-
-    if (!user) return res.status(404).json({ error: "User not found " });
-
-    if (user.tokenVersion !== decoded.tokenVersion)
-      return res.status(401).json({ error: "Invalid refresh token" });
-
-    res.setHeader("refresh-token", "");
-
-    return res.status(204).json();
-  } catch (error) {
-    console.error("Error during logout: ", error);
-    return res.status(500).json({ error: "Internal server error" });
-  }
+  return res.status(200).json(userProfile);
 };
-
-// Function for getting the user credentials 
