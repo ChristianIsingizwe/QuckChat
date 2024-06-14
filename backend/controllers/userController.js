@@ -3,6 +3,7 @@ import bcrypt, { genSalt } from "bcrypt";
 import _ from "lodash";
 import { User } from "../models/userModel.js";
 import { createTokens } from "../tokens/createTokens.js";
+import { verify } from "jsonwebtoken";
 
 // A joi schema for validating the users
 const schema = Joi.object({
@@ -25,7 +26,7 @@ export const registerUser = async (req, res) => {
     if (user) res.status(400).json({ error: "The user already exist" });
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await  bcrypt.hash(data.password, salt);
+    const hashedPassword = await bcrypt.hash(data.password, salt);
 
     user = new User({ ...data, password: hashedPassword });
 
@@ -76,3 +77,9 @@ export const findUser = async (req, res) => {
   if (!user) return res.status(400).json({ error: "The user doesn't exist" });
   res.status(200).json(user);
 };
+
+// Function for logging out the user
+
+export const logoutUser = async (req, res)=>{
+
+}
