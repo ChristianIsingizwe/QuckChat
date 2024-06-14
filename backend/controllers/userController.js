@@ -28,8 +28,7 @@ export const registerUser = async (req, res) => {
     );
     if (user) res.status(400).json({ error: "The user already exist" });
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(data.password, salt);
+    const hashedPassword = await bcrypt.hash(data.password);
 
     user = new User({ ...data, password: hashedPassword });
 
@@ -46,22 +45,29 @@ export const registerUser = async (req, res) => {
 // Function for logging in the user
 
 export const loginUser = async (req, res) => {
-  const data = _.pick(req.body, ["email", "password"]);
-  const result = schema.validate(data);
-
-  if (result?.error)
-    return res.status(400).json({ error: result.error.details[0].message });
-
   try {
-    let user = User.findOne({ email: data.email }).select("username, email");
+    const data = _.pick(req.body, ["email", "password"]);
+    const result = schema.validate(data);
+
+    if (result?.error)
+      return res.status(400).json({ error: result.error.details[0].message });
+
+    let user = await User.findOne({ email: data.email });
     if (!user) return res.status(400).json({ error: "The user doesn't exist" });
 
-    const passwordCheck = bcrypt.compare(data.password, user.password);
-    if (!passwordCheck)
-      return res.status(400).json({ error: "Invalid password" });
+    console.log(user);
 
-    res.status(200).json(user);
+    const valid = bcrypt.compare(data.password, user.password);
+
+    if (!valid) {
+      return res.status(200).json({ error: "Invalid credentials" });
+    }
+
+    const token = createTokens(user);
+
+    return res.status(200).json({ ...user, token });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ err: "Internal server error" });
   }
 };
@@ -86,11 +92,18 @@ export const findUser = async (req, res) => {
 // Function for getting the profile of the user
 
 export const getProfile = async (req, res) => {
-  const userId = _.pick(req.params, ["id"]);
+  try {
+    const userId = _.pick(req.params, ["id"]);
+    if (!userId) return res.status(400).json({ error: "No id provided" });
 
-  const userProfile = await User.findById(userId).select("username, password");
-  if (!userProfile)
-    return res.status(404).json({ error: "User profile not found" });
+    const userProfile = await User.findById(userId).select(
+      "username, password"
+    );
+    if (!userProfile)
+      return res.status(404).json({ error: "User profile not found" });
 
-  return res.status(200).json(userProfile);
+    return res.status(200).json(userProfile);
+  } catch (err) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
 };

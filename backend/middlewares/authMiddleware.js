@@ -1,5 +1,5 @@
 import createHttpError from "http-errors";
-import { verify } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { User } from "../models/userModel.js";
 import { createTokens } from "../tokens/createTokens.js";
 
@@ -12,7 +12,7 @@ export const isAuth =
     }
 
     try {
-      const data = verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+      const data = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
       req.userId = data.userId;
       return next();
     } catch (err) {
@@ -27,7 +27,7 @@ export const isAuth =
     let data;
 
     try {
-      data = verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+      data = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
     } catch {
       return next(shouldThrow && createHttpError(401, "not authenticated"));
     }

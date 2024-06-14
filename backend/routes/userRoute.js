@@ -14,6 +14,6 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/:id", isAuth, findUser);
 router.get("/", isAuth, findUsers);
-router.get("/getProfile", isAuth, getProfile);
+router.get("/getProfile/:id", isAuth, getProfile);
 
 export default router;
