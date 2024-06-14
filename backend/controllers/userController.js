@@ -80,6 +80,28 @@ export const findUser = async (req, res) => {
 
 // Function for logging out the user
 
-export const logoutUser = async (req, res)=>{
+export const logoutUser = async (req, res) => {
+  const refreshToken = req.headers["refresh-token"];
 
-}
+  if (!refreshToken) return res.status(401).json({ error: "Unauthorized " });
+
+  try {
+    const decoded = verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    const user = await User.findById(decoded.userId);
+
+    if (!user) return res.status(404).json({ error: "User not found " });
+
+    if (user.tokenVersion !== decoded.tokenVersion)
+      return res.status(401).json({ error: "Invalid refresh token" });
+
+    res.setHeader("refresh-token", "");
+
+    return res.status(204).json();
+  } catch (error) {
+    console.error("Error during logout: ", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Function for getting the user credentials 
