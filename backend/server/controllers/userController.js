@@ -28,7 +28,7 @@ export const registerUser = async (req, res) => {
     );
     if (user) res.status(400).json({ error: "The user already exist" });
 
-    const hashedPassword = await bcrypt.hash(data.password);
+    const hashedPassword = bcrypt.hash(data.password);
 
     user = new User({ ...data, password: hashedPassword });
 
@@ -71,6 +71,8 @@ export const loginUser = async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json({ err: "Internal server error" });
+
+    
   }
 };
 
@@ -95,16 +97,13 @@ export const findUser = async (req, res) => {
 
 export const getProfile = async (req, res) => {
   try {
-    const userId = _.pick(req.params, ["id"]);
-    if (!userId) return res.status(400).json({ error: "No id provided" });
+    const userId = req.userId;
+    if (!userId) return res.status(200).json({ profile: null });
 
-    const userProfile = await User.findById(userId).select(
-      "username, email"
-    );
-    if (!userProfile)
-      return res.status(404).json({ error: "User profile not found" });
+    const userProfile = await User.findById(userId).select("username, email");
+    if (!userProfile) return res.status(404).json({ profile: null });
 
-    return res.status(200).json(userProfile);
+    return res.status(200).json({ profile: userProfile });
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
   }
