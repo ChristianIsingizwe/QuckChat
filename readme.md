@@ -4,6 +4,6 @@
 Built with: 
 - Node.js
 - Express.js
-- Socket cluster
+- Socket IO 
 - Mongoose
 
