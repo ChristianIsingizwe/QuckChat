@@ -1,9 +1,9 @@
 
 ## REAL-TIME CHAT APPLICATION 
 
-- Built with: 
+Built with: 
 - Node.js
 - Express.js
-- Socket.io
+- Socket cluster
 - Mongoose
 
